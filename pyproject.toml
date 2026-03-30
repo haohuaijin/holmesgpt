@@ -156,6 +156,7 @@ markers = [
     "embeds: Tests ensuring embeds are as expected",
     "one-test: Runs only one simple eval",
     "loki: Loki toolset",
+    "openobserve: OpenObserve toolset",
     "coralogix: Runs coralogix evals",
     "fast: Fast cloud-only tests that don't require Kubernetes infrastructure",
     "frontend: Run frontend tests",

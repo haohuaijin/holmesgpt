@@ -1,0 +1,48 @@
+OpenObserve is a cloud-native observability platform for logs, metrics, and traces. It uses SQL for querying.
+
+**Query Language:**
+- OpenObserve uses **SQL** for log queries, not LogQL
+- Use standard SQL syntax: `SELECT * FROM stream_name WHERE condition`
+- Field search: `str_match(field_name, 'value')` searches a specific field for a substring
+- Example: `SELECT * FROM default WHERE level = 'ERROR' ORDER BY _timestamp DESC`
+- Example with text search: `SELECT * FROM default WHERE str_match(message, 'connection') ORDER BY _timestamp DESC`
+
+**Stream Names:**
+- Logs are organized into streams (similar to indices/tables)
+- Use the `openobserve_list_streams` tool first to discover available stream names
+- Common default stream name is `default`
+
+**Time Handling:**
+- Time ranges are passed as parameters to the search tool (start/end in RFC3339 format)
+- The `_timestamp` column contains the event timestamp in microseconds
+- You can use `_timestamp` in WHERE clauses and ORDER BY
+
+**IMPORTANT: Querying Strategy:**
+- First, list streams to discover what's available
+- Then query with a broad filter like `SELECT * FROM stream_name ORDER BY _timestamp DESC` to see the schema
+- Once you know the fields, filter specifically: `WHERE level = 'ERROR'` or `WHERE str_match(message, 'keyword')`
+- Do NOT use `match_all()` - it requires full text search fields to be pre-configured and will fail on most streams
+
+**IMPORTANT WILDCARD USAGE:**
+- When searching for pods, use SQL LIKE patterns: `WHERE pod_name LIKE 'nginx-%'`
+- Use `%` as wildcard in SQL LIKE clauses (not `*`)
+- For partial matches: `WHERE field LIKE '%keyword%'`
+
+**When user provides what looks like a complete pod name** (e.g., `my-workload-5f9d8b7c4d-x2km9`):
+- Query OpenObserve directly with that exact pod name
+- Do NOT try to verify if the pod exists in Kubernetes first
+- This allows querying historical pods that have been deleted/replaced
+
+**Best Practices:**
+- Always start by listing streams to know what data is available
+- Use `ORDER BY _timestamp DESC` to get most recent logs first
+- Filter by specific fields: `WHERE level = 'ERROR'`, `WHERE service = 'my-service'`
+- Use `str_match(field, 'keyword')` for substring matching within a field
+- Combine filters: `WHERE level = 'ERROR' AND str_match(message, 'timeout')`
+- If no time range is specified, use the last 4 hours as default
+
+**When investigating issues or incidents:**
+- Do NOT do a broad unfiltered search first — you will hit the result limit and only see recent INFO logs
+- Start by searching specifically for ERROR and WARN level logs over the full time window: `WHERE level IN ('ERROR', 'WARN')`
+- Then narrow down by service or pod: `WHERE level IN ('ERROR', 'WARN') AND str_match(service, 'my-service')`
+- Only fall back to a broad search if no errors/warnings are found

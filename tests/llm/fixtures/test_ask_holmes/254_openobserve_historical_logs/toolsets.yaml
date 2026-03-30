@@ -1,0 +1,11 @@
+toolsets:
+  kubernetes/logs:
+    enabled: false
+  openobserve/logs:
+    enabled: true
+    config:
+      api_url: http://localhost:5080
+      org_id: default
+      username: "root@example.com"
+      password: "Complexpass#123"
+      no_proxy: true

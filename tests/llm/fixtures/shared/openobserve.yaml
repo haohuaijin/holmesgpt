@@ -1,0 +1,56 @@
+# Shared OpenObserve deployment configuration for test fixtures
+# Apply with: kubectl apply -f openobserve.yaml -n <namespace>
+# Note: Namespace must be created separately
+---
+# OpenObserve deployment - lightweight, single-node, in-memory storage
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openobserve
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openobserve
+  template:
+    metadata:
+      labels:
+        app: openobserve
+      annotations:
+        admission.datadoghq.com/enabled: "false"
+    spec:
+      containers:
+      - name: openobserve
+        image: public.ecr.aws/zinclabs/openobserve:v0.14.5
+        ports:
+        - containerPort: 5080
+          name: http
+        env:
+        - name: ZO_ROOT_USER_EMAIL
+          value: "root@example.com"
+        - name: ZO_ROOT_USER_PASSWORD
+          value: "Complexpass#123"
+        - name: ZO_LOCAL_MODE
+          value: "true"
+        - name: ZO_LOCAL_MODE_STORAGE
+          value: "disk"
+        - name: ZO_DATA_DIR
+          value: "/data"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "50m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: openobserve
+spec:
+  selector:
+    app: openobserve
+  ports:
+  - port: 5080
+    targetPort: 5080
